@@ -1,3 +1,9 @@
+.idea/
+data/*
+!data/downloads.py
+samples/
+*.pickle
+
 checkpoint/*
 102flowers/*
 cub_birds_200_2011/*

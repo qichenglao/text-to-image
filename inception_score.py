@@ -31,7 +31,8 @@ def get_inception_score(images, splits=10):
   for img in images:
     img = img.astype(np.float32)
     inps.append(np.expand_dims(img, 0))
-  bs = 100
+  bs = 1
+  # print(len(inps), inps[0].shape)
   with tf.Session() as sess:
     preds = []
     n_batches = int(math.ceil(float(len(inps)) / float(bs)))
@@ -43,6 +44,7 @@ def get_inception_score(images, splits=10):
         pred = sess.run(softmax, {'ExpandDims:0': inp})
         preds.append(pred)
     preds = np.concatenate(preds, 0)
+    # print(preds.shape)
     scores = []
     for i in range(splits):
       part = preds[(i * preds.shape[0] // splits):((i + 1) * preds.shape[0] // splits), :]
@@ -87,9 +89,11 @@ def _init_inception():
                     new_shape.append(None)
                 else:
                     new_shape.append(s)
-            o._shape = tf.TensorShape(new_shape)
+            # o._shape = tf.TensorShape(new_shape)
+            o.set_shape(tf.TensorShape(new_shape))
     w = sess.graph.get_operation_by_name("softmax/logits/MatMul").inputs[1]
-    logits = tf.matmul(tf.squeeze(pool3), w)
+    # logits = tf.matmul(tf.squeeze(pool3), w)
+    logits = tf.matmul(tf.squeeze(pool3, [1, 2]), w)
     softmax = tf.nn.softmax(logits)
 
 if softmax is None:
@@ -115,5 +119,15 @@ if softmax is None:
     # images_test = np.array(images_test)
     # print(np.max(images_test_256[0]))
     # exit()
-    score_mean, score_std = get_inception_score(images_train_256)
+    cwd = os.getcwd()
+    img_dir = os.path.join(cwd, 'samples/step1_gan-cls/')
+    imgs = os.listdir(img_dir)
+    images_256 = []
+
+    for img in imgs:
+        img_raw = scipy.misc.imread(os.path.join(img_dir, img))
+        images_256.append(img_raw)
+    score_mean, score_std = get_inception_score(images_256)
+
+    # score_mean, score_std = get_inception_score(images_train_256)
     print("\nscore:",score_mean, score_std)
